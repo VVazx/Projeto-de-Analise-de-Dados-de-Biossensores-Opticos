@@ -67,9 +67,9 @@ class CalibrationAnalyzer:
         """
         try: 
             if name == 'Logístico':
-                return f'y = {params[0]:.2f} / (1 + np.exp({params[1]:.2f} * (x - {params[2]:.2f}))) + {params[3]:.2f}'
+                return f'y = {params[0]:.3e} / (1 + exp({params[1]:.2f} * (x - {params[2]:.2f}))) + {params[3]:.4e}'
             elif name == 'Exponencial':
-                return f'y = {params[0]:.2f} * np.exp({params[1]:.2f} * x) + {params[2]:.2f}'
+                return f'y = {params[0]:.2f} * exp({params[1]:.2f} * x) + {params[2]:.2f}'
             elif name == 'Polinomial 2ª ordem':
                 return f'y = {params[0]:.2f} * x² + {params[1]:.2f} * x + {params[2]:.2f}'
             elif name == 'Polinomial 3ª ordem':
