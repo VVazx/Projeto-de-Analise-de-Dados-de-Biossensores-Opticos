@@ -9,3 +9,12 @@ antibodies_path = "C:/Users/Victor/OneDrive/Área de Trabalho/IL1_04-11-25/04_11
 # Prefixo da amostra usada no experimento
 # Exemplo: "IL1", "IL10", etc.
 sample_prefix = "IL1"
+# Configuração do filtro de espectro
+filter_config = {
+    "type": "savitzky", # Tipo de filtro: "savitzky", "media_movel", "mediana",...
+    "params": {
+        "window": 53, # Esse é o tamanho da janela para o filtro escolhido, quanto maior mais suave fica o sinal
+        "order": 2 # Ordem do polinômio para o filtro escolhido, quanto maior mais próximo do sinal original fica o sinal
+    }
+}
+

@@ -6,6 +6,8 @@ import logging
 from utils import get_file_creation_time
 import config as cfg
 from process_spectra import funcs
+import custom_filters as cf
+
 
 class SpectrumProcessor:
     """
@@ -15,15 +17,22 @@ class SpectrumProcessor:
 
     def __init__(self, rp=3, dwl=2):
         """
-        Inicializa o processador com parâmentros padrão de filtragem.
+        Inicializa o processador com parâmentros padrão de filtragem e carrega a configuração de filtro do config.py.
         :param rp: Resolução de proximidade (resolution_proximity).
         :param dwl: dwl (passado para get_approximate_valley).
         """
         self.rp = rp
         self.dwl = dwl
-        logging.info("Objeto SpectrumProcessor criado.")
-
-
+        try:
+            self.filter_settings = cfg.filter_config 
+            f_type = self.filter_settings.get("type", "desconhecido")
+            logging.info(f"Objeto SpectrumProcessor criado. Filtro {f_type} ativo.")
+                
+        except AttributeError as e:
+            logging.error(f"A variável 'filter_config' não foi encontrada no config.py. Erro: {e}")
+            raise
+    
+    
     def _process_folder(self, folder_path, time_threshold_seconds, prominence):
         """
         Processa todos os arquivos em uma pasta.
@@ -45,7 +54,7 @@ class SpectrumProcessor:
         if not all_files:
             logging.warning(f"Nenhum arquivo .txt encontrado em: {folder_path} (ou em suas subpastas)")
             return [], []
-            logging.info(f"Encontrados {len(all_files)} arquivos .txt. Iniciando processamento...")
+        logging.info(f"Encontrados {len(all_files)} arquivos .txt. Iniciando processamento...")
         spec_data = []
         timestamps_raw = []
 
@@ -76,9 +85,44 @@ class SpectrumProcessor:
         for i, timestamp in enumerate(timestamps_normalized):
             if timestamp >= time_threshold_seconds:
                 try:
-                    # Aplicar o primeiro filtro (Savitzky-Golay, etc.)
-                    spec_filtered_data = funcs.filter_spectrum(spec_data[i], None, 25, 2, quiet=True)[0]
+                    # --- Roteador de Filtros (VERSÃO NOVA) ---
+                    f_config = self.filter_settings
+                    f_type = f_config["type"]
+                    f_params = f_config["params"] # Dicionário de parâmetros
                     
+                    spec_filtered_data = None
+                    
+                    try:
+                        if f_type == "savitzky":
+                            spec_filtered_data = cf.apply_savitzky(
+                                spec_data[i], 
+                                window=f_params["window"], 
+                                order=f_params["order"]
+                            )
+                        
+                        elif f_type == "media_movel":
+                            spec_filtered_data = cf.apply_media_movel(
+                                spec_data[i], 
+                                window=f_params["window"]
+                            )
+                        
+                        elif f_type == "mediana":
+                            spec_filtered_data = cf.apply_mediana(
+                                spec_data[i], 
+                                window=f_params["window"]
+                            )
+                            
+                        elif f_type == "nenhum":
+                            spec_filtered_data = cf.apply_nenhum(spec_data[i])
+                            
+                        else:
+                            logging.warning(f"Tipo de filtro '{f_type}' desconhecido. Nenhum filtro aplicado.")
+                            spec_filtered_data = spec_data[i]
+
+                    except Exception as e:
+                        logging.error(f"Erro ao aplicar o filtro '{f_type}': {e}")
+                        spec_filtered_data = spec_data[i]
+
                     info = {} # Dicionário para 'get_approximate_valley'
                     _, info = funcs.get_approximate_valley(
                         spec_filtered_data, 
