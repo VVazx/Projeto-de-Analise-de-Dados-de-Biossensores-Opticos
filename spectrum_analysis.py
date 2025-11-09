@@ -44,8 +44,8 @@ class SpectrumProcessor:
                     all_files.append(os.path.join(dirpath, f))
         if not all_files:
             logging.warning(f"Nenhum arquivo .txt encontrado em: {folder_path} (ou em suas subpastas)")
-            return [], []
-            logging.info(f"Encontrados {len(all_files)} arquivos .txt. Iniciando processamento...")
+        return [], []
+        logging.info(f"Encontrados {len(all_files)} arquivos .txt. Iniciando processamento...")
         spec_data = []
         timestamps_raw = []
 
@@ -67,6 +67,7 @@ class SpectrumProcessor:
 
         if not spec_data:
             logging.error(f"Nenhum dado válido encontrado na pasta.{folder_path}")
+            return [],[]
 
         timestamps_raw = np.array(timestamps_raw)
         timestamps_normalized = timestamps_raw - timestamps_raw.min()
